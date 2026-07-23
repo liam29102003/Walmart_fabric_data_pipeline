@@ -1,0 +1,12 @@
+https://walmart-api-two.vercel.app/api/customers
+
+https://walmart-api-two.vercel.app/api/stores
+
+https://walmart-api-two.vercel.app/api/employees
+
+https://walmart-api-two.vercel.app/api/order_items
+
+https://walmart-api-two.vercel.app/api/orders
+
+https://walmart-api-two.vercel.app/api/products
+
