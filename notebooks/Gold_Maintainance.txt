@@ -1,0 +1,253 @@
+from datetime import datetime
+import time
+from pyspark.sql import functions as F
+
+GOLD_SCHEMA = "gold"
+MAINTENANCE_LOG_TABLE = "table_maintenance_log"
+
+DEFAULT_RETENTION_HOURS = 168  # 7 days
+
+OPTIMIZE_TABLES = [
+    "gold.fact_orders",
+]
+
+WEEKLY_MAINTENANCE_TABLES = [
+    "gold.dim_customers",
+    "gold.dim_products",
+    "gold.dim_stores",
+    "gold.dim_employees",
+    "gold.dim_orders",
+]
+
+MIN_FILE_COUNT_FOR_OPTIMIZE = 500
+
+GOLD_TABLES = [
+    "gold.fact_orders",
+    "gold.dim_customers",
+    "gold.dim_products",
+    "gold.dim_stores",
+    "gold.dim_employees",
+    "gold.dim_orders",
+]
+
+def get_table_metrics(table_name: str) -> dict:
+    """
+    Get Delta table information before maintenance.
+    """
+
+    try:
+        detail = spark.sql(
+            f"DESCRIBE DETAIL {table_name}"
+        ).collect()[0]
+
+        return {
+            "file_count": detail["numFiles"],
+            "size_bytes": detail["sizeInBytes"]
+        }
+
+    except Exception as e:
+        print(f"[DETAIL] {table_name} FAILED: {e}")
+
+        return {
+            "file_count": None,
+            "size_bytes": None
+        }
+
+
+def optimize_table(table_name: str) -> tuple:
+
+    start_time = time.time()
+
+    try:
+        metrics = get_table_metrics(table_name)
+
+        file_count = metrics["file_count"]
+
+        if file_count is not None and file_count < MIN_FILE_COUNT_FOR_OPTIMIZE:
+            print(
+                f"[OPTIMIZE] {table_name} skipped "
+                f"(files={file_count})"
+            )
+
+            return "SKIPPED", 0
+
+        print(f"[OPTIMIZE] {table_name} started")
+
+        spark.sql(
+            f"OPTIMIZE {table_name}"
+        )
+
+        duration = round(
+            time.time() - start_time,
+            2
+        )
+
+        print(
+            f"[OPTIMIZE] {table_name} completed "
+            f"({duration}s)"
+        )
+
+        return "SUCCESS", duration
+
+
+    except Exception as e:
+
+        duration = round(
+            time.time() - start_time,
+            2
+        )
+
+        print(
+            f"[OPTIMIZE] {table_name} FAILED: {e}"
+        )
+
+        return "FAILED", duration
+
+
+
+def vacuum_table(
+    table_name: str,
+    retention_hours: int = DEFAULT_RETENTION_HOURS
+) -> tuple:
+
+    start_time = time.time()
+
+    try:
+
+        print(
+            f"[VACUUM] {table_name} started "
+            f"(retention={retention_hours}h)"
+        )
+
+        spark.sql(
+            f"""
+            VACUUM {table_name}
+            RETAIN {retention_hours} HOURS
+            """
+        )
+
+        duration = round(
+            time.time() - start_time,
+            2
+        )
+
+        print(
+            f"[VACUUM] {table_name} completed "
+            f"({duration}s)"
+        )
+
+        return "SUCCESS", duration
+
+
+    except Exception as e:
+
+        duration = round(
+            time.time() - start_time,
+            2
+        )
+
+        print(
+            f"[VACUUM] {table_name} FAILED: {e}"
+        )
+
+        return "FAILED", duration
+
+
+
+def maintain_table(
+    table_name: str,
+    run_vacuum: bool = False,
+    retention_hours: int = DEFAULT_RETENTION_HOURS
+) -> dict:
+
+    print("=" * 80)
+    print(f"Maintaining: {table_name}")
+    print("=" * 80)
+
+    optimize_status, optimize_duration = optimize_table(
+        table_name
+    )
+
+    if run_vacuum:
+        vacuum_status, vacuum_duration = vacuum_table(
+            table_name,
+            retention_hours
+        )
+    else:
+        vacuum_status = "SKIPPED"
+        vacuum_duration = 0
+    return {
+        "table_name": table_name,
+        "optimize_status": optimize_status,
+        "vacuum_status": vacuum_status,
+        "optimize_duration_seconds": optimize_duration,
+        "vacuum_duration_seconds": vacuum_duration,
+        "execution_timestamp": datetime.now(),
+    }
+
+
+RUN_VACUUM = True
+tables_to_process = (
+    OPTIMIZE_TABLES
+    + WEEKLY_MAINTENANCE_TABLES
+)
+
+
+maintenance_results = [
+    maintain_table(
+        table_name,
+        run_vacuum=RUN_VACUUM,
+        retention_hours=DEFAULT_RETENTION_HOURS
+    )
+    for table_name in tables_to_process
+]
+
+summary_df = spark.createDataFrame(
+    maintenance_results
+).select(
+    "table_name",
+    "optimize_status",
+    "vacuum_status",
+    "optimize_duration_seconds",
+    "vacuum_duration_seconds",
+    "execution_timestamp"
+)
+
+
+display(summary_df)
+
+
+full_log_table = f"{GOLD_SCHEMA}.{MAINTENANCE_LOG_TABLE}"
+
+
+(
+    summary_df.write
+    .format("delta")
+    .mode("append")
+    .option(
+        "mergeSchema",
+        "true"
+    )
+    .saveAsTable(full_log_table)
+)
+
+
+failed_count = sum(
+    1
+    for r in maintenance_results
+    if r["optimize_status"] == "FAILED"
+    or r["vacuum_status"] == "FAILED"
+)
+
+
+print(
+    f"Maintenance complete: "
+    f"{len(maintenance_results)} tables processed, "
+    f"{failed_count} failure(s)"
+)
+
+
+if failed_count > 0:
+    raise Exception(
+        f"Maintenance failed for {failed_count} table(s)"
+    )
