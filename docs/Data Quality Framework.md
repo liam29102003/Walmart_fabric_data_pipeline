@@ -1,24 +1,24 @@
-### Data Quality Framework
+### **Data Quality Framework**
 
 
 
-1. #### Overview
+### **1. Overview**
 
 
 
-The Data Quality Framework is a centralized, meta-driven validation engine designed to ensure data integrity as it moves from the Silver technical layer (silver\_t) to the Gold layer . It is designed to act as a critical gatekeeper. If any of the data quality test fails, the pipeline is designed to raise an exception that will stop the movement of data flow to gold layer to prevent '**garbage in, garbage out**" cases.
+The Data Quality Framework is a centralized, meta-driven validation engine designed to ensure data integrity as it moves from the Silver technical layer (silver\_t) to the Gold layer . It is design[...]
 
 
 
-#### 2\. Core Validation Logic
+### **2. Core Validation Logic**
 
 
 
-This framework use a Dispatch pattern to map specific test types to modular Pyspark validation functions. This is meant for easy extensibility. New test case can be added by simply defining a new function and adding it to the dispatch table.
+This framework use a Dispatch pattern to map specific test types to modular Pyspark validation functions. This is meant for easy extensibility. New test case can be added by simply defining a new [...]
 
 
 
-##### Supported test types:
+#### **Supported test types:**
 
 
 
@@ -29,7 +29,7 @@ This framework use a Dispatch pattern to map specific test types to modular Pysp
 
 
 
-#### 3\. Metadata-Drive Execution
+### **3. Metadata-Drive Execution**
 
 
 
@@ -47,11 +47,11 @@ The framework is configured using a metadata list (DQ\_TEST\_METADATA), which al
 
 
 
-#### 4\. Operational Features
+### **4. Operational Features**
 
 
 
-###### Efficient Processing
+##### **Efficient Processing**
 
 
 
@@ -59,7 +59,7 @@ The framework minimizes compute costs by using a table cache during execution. E
 
 
 
-###### Historical Auditing \& Logging
+##### **Historical Auditing \& Logging**
 
 
 
@@ -67,16 +67,11 @@ All test results—including table names, test names, failed record counts, and 
 
 
 
-###### Pipeline "Circuit Breaker"
+##### **Pipeline "Circuit Breaker"**
 
 
 
 The framework enforces a strict quality standard. If any test results in a FAIL status, the notebook raises an Exception, which stop the pipeline before it can insert data to the Gold layer.
-
-
-
-
-
 
 
 
