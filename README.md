@@ -101,7 +101,8 @@ The pipeline is orchestrated as a sequential workflow that transforms raw data i
 
 * This stage uses a ForEach loop containing an Extraction_Loop activity
 * It performs the Bronze_Extraction process, which pulls data from external sources (REST APIs) and save them as Delta tables in their raw, untransformed state under the bronze schema.
-* This stage established a "Source of Truth". By landing data in Bronze layer first, this allow for re-producibility - if a transformation fails, it allow re-running the pipeline from the Bronze layer[...]
+* This stage established a "Source of Truth". By landing data in Bronze layer first, this allow for re-producibility - if a transformation fails, it allow re-running the pipeline from the Bronze layer without having to hit the external source systems again.
+
 
 ### Stage 2: Silver Technical Layer (silver_t)
 
@@ -151,6 +152,8 @@ TO maintain long-term performance of the pipeline, a separate maintenance workfl
 * Compaction (Optimizes): merge small files into larger ones to improve read performance, with specific time period for each fact and dimension tables.
 * Cleanup (Vacuum): Removes expire delta files that are no longer needed for time travel, using 7-day (168-hour) retention period
 * Reporting: Logs maintenance duration and status for every table to a table_maintenance_log table.
+
+
 
 # Data Quality Framework
 
