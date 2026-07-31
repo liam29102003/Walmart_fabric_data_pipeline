@@ -77,7 +77,9 @@ To demonstrate a long-term roadmap for production environments, the following fe
 * Semantic Layer Integration: Automating the refresh of Power BI Semantic Models upon successful Gold-layer completion.
 
 
-****************** Add Visual Diagram **************************
+![Image](docs/image.png)
+
+
 
 # Data Pipeline Workflow
 
