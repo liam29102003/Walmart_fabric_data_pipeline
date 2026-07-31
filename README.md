@@ -71,6 +71,11 @@ To demonstrate a long-term roadmap for production environments, the following fe
 * Automated Alerting: Integration with Office 365/Teams to send notifications on pipeline failure.
 * Environment Parameterization: Implementing dynamic environment switching for CI/CD readiness.
 * Semantic Layer Integration: Automating the refresh of Power BI Semantic Models upon successful Gold-layer completion.
+
+
+
+Architectural Diagram
+
 ![Image](docs/Architecture.png)
 
 
