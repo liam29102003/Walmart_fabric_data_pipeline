@@ -303,4 +303,20 @@ The maintenance notebook acts as a "smart" process within the pipeline
 * Performance in Delta Lake degrades over time due to the "small file problem." Regularly scheduled OPTIMIZE and VACUUM operations are needed to maintain high-speed query performance.
 
 
+## Acknowledgments
+
+This project was inspired by Ansh Lamba's YouTube video, **"WALMART Data Engineering End-To-End Project [Airflow + DBT + Databricks]"**, which served as the initial architectural reference for the overall pipeline design.
+
+This implementation is **not a direct reproduction** of that project. While it follows a similar high-level Medallion Architecture concept, the pipeline has been redesigned with a different technology stack (Microsoft Fabric, PySpark, and Delta Lake) and includes numerous original engineering decisions and enhancements, including:
+
+- Metadata-driven transformation framework
+- Custom dynamic SQL generation engine
+- Centralized Data Quality framework with a Circuit Breaker pattern
+- Manual SCD Type 2 implementation using SHA-256 hashing
+- Automated Delta table maintenance and optimization
+- Additional modularization and production-oriented engineering practices
+
+Special thanks to **Ansh Lamba** for creating educational content that inspired the foundation of this project.
+
+
 
