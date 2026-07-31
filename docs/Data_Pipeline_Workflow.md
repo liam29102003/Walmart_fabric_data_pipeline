@@ -19,7 +19,8 @@ The pipeline is orchestrated as a sequential workflow that transforms raw data i
 
 * This stage uses a ForEach loop containing an Extraction_Loop activity
 * It performs the Bronze_Extraction process, which pulls data from external sources (REST APIs) and save them as Delta tables in their raw, untransformed state under the bronze schema.
-* This stage established a "Source of Truth". By landing data in Bronze layer first, this allow for re-producibility - if a transformation fails, it allow re-running the pipeline from the Bronze layer[...]
+* This stage established a "Source of Truth". By landing data in Bronze layer first, this allow for re-producibility - if a transformation fails, it allow re-running the pipeline from the Bronze layer without having to hit the external source systems again.
+
 
 ### Stage 2: Silver Technical Layer (silver_t)
 
